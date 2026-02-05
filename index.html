@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Image Resizer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body{
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background:#111;
+    color:#eee;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+  }
+
+  .card{
+    background:#1c1c1c;
+    padding:20px;
+    border-radius:14px;
+    width:320px;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+
+  h1{
+    font-size:16px;
+    margin:0 0 12px;
+    text-align:center;
+  }
+
+  input, button{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    font-size:14px;
+  }
+
+  input{
+    background:#2a2a2a;
+    color:#fff;
+  }
+
+  button{
+    background:#3b82f6;
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  button:active{
+    transform:scale(.98);
+  }
+
+  canvas{
+    display:none;
+  }
+
+  .row{
+    display:flex;
+    gap:8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Image Resizer</h1>
+
+  <input type="file" id="fileInput" accept="image/*">
+
+  <div class="row">
+    <input type="number" id="widthInput" placeholder="Width (px)">
+    <input type="number" id="heightInput" placeholder="Height (px)">
+  </div>
+
+  <div class="row" style="align-items:center; margin-top:6px;">
+    <input type="checkbox" id="lockInput" checked style="width:auto; margin:0;">
+    <label for="lockInput" style="font-size:13px; color:#bbb; margin-left:6px;">Lock aspect ratio</label>
+  </div>
+
+  <div class="presets" style="display:flex; gap:8px; margin-top:10px;">
+    <button type="button" class="presetBtn" data-preset="720">720p</button>
+    <button type="button" class="presetBtn" data-preset="1080">1080p</button>
+    <button type="button" class="presetBtn" data-preset="1440">2K</button>
+    <button type="button" class="presetBtn" data-preset="2160">4K</button>
+  </div>
+
+  <button id="resizeBtn">Resize & Download</button>
+
+  <canvas id="canvas"></canvas>
+</div>
+
+<script>
+const fileInput = document.getElementById("fileInput");
+const widthInput = document.getElementById("widthInput");
+const heightInput = document.getElementById("heightInput");
+const lockInput = document.getElementById("lockInput");
+const presetBtns = document.querySelectorAll(".presetBtn");
+const resizeBtn = document.getElementById("resizeBtn");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let img = new Image();
+let aspectRatio = null;
+
+fileInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    img.onload = () => {
+      widthInput.value = img.width;
+      heightInput.value = img.height;
+      aspectRatio = img.width / img.height;
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function syncHeightFromWidth(){
+  if(!lockInput.checked || !aspectRatio) return;
+  const w = parseInt(widthInput.value);
+  if(!w) return;
+  heightInput.value = Math.round(w / aspectRatio);
+}
+
+function syncWidthFromHeight(){
+  if(!lockInput.checked || !aspectRatio) return;
+  const h = parseInt(heightInput.value);
+  if(!h) return;
+  widthInput.value = Math.round(h * aspectRatio);
+}
+
+widthInput.addEventListener("input", syncHeightFromWidth);
+heightInput.addEventListener("input", syncWidthFromHeight);
+
+presetBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if(!img.src) return alert("Upload an image first");
+    if(!aspectRatio) return;
+
+    const targetH = parseInt(btn.dataset.preset);
+    const isLandscape = img.width >= img.height;
+
+    if(isLandscape){
+      const presetW = Math.round(targetH * (16 / 9));
+      widthInput.value = presetW;
+      heightInput.value = Math.round(presetW / aspectRatio);
+    }else{
+      heightInput.value = targetH;
+      widthInput.value = Math.round(targetH * aspectRatio);
+    }
+  });
+});
+
+resizeBtn.addEventListener("click", () => {
+  if(!img.src) return alert("Upload an image first");
+
+  const w = parseInt(widthInput.value);
+  const h = parseInt(heightInput.value);
+
+  if(!w || !h) return alert("Enter width and height");
+
+  canvas.width = w;
+  canvas.height = h;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(img, 0, 0, w, h);
+
+  const link = document.createElement("a");
+  link.download = `resized-${w}x${h}.jpg`;
+  link.href = canvas.toDataURL("image/jpeg", 0.95);
+  link.click();
+});
+</script>
+
+</body>
+</html>
