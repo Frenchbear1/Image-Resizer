@@ -1,184 +1,828 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Image Resizer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Image Resizer & Compressor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card-bg: #181b22;
+      --card-soft: #1f232c;
+      --accent: #4f8cff;
+      --accent-soft: rgba(79, 140, 255, 0.14);
+      --text: #f5f5f7;
+      --text-soft: #9ea3b3;
+      --border: #262a33;
+      --radius-lg: 18px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.55);
+    }
 
-<style>
-  body{
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background:#111;
-    color:#eee;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-  .card{
-    background:#1c1c1c;
-    padding:20px;
-    border-radius:14px;
-    width:320px;
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
-  }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #182033 0, #050609 45%, #000 100%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
 
-  h1{
-    font-size:16px;
-    margin:0 0 12px;
-    text-align:center;
-  }
+    .shell {
+      width: 100%;
+      max-width: 860px;
+    }
 
-  input, button{
-    width:100%;
-    margin-top:10px;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-    font-size:14px;
-  }
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
 
-  input{
-    background:#2a2a2a;
-    color:#fff;
-  }
+    header h1 {
+      font-size: 1.7rem;
+      letter-spacing: 0.02em;
+      margin: 0 0 6px;
+    }
 
-  button{
-    background:#3b82f6;
-    color:#fff;
-    font-weight:600;
-    cursor:pointer;
-  }
+    header p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-soft);
+    }
 
-  button:active{
-    transform:scale(.98);
-  }
+    .card {
+      background: linear-gradient(145deg, var(--card-bg), var(--card-soft));
+      border-radius: 26px;
+      padding: 20px 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      gap: 18px;
+    }
 
-  canvas{
-    display:none;
-  }
+    @media (min-width: 780px) {
+      .card {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+        padding: 22px 22px 20px;
+      }
+    }
 
-  .row{
-    display:flex;
-    gap:8px;
-  }
-</style>
+    .section-title {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-soft);
+      margin-bottom: 4px;
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-block {
+      background: rgba(15, 16, 23, 0.7);
+      border-radius: 16px;
+      border: 1px solid rgba(129, 140, 248, 0.1);
+      padding: 12px 12px 10px;
+    }
+
+    .field-block + .field-block {
+      margin-top: 4px;
+    }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+      color: var(--text-soft);
+    }
+
+    .field-label span.main {
+      text-transform: none;
+      font-weight: 500;
+      color: #e5e7f5;
+    }
+
+    .field-label span.hint {
+      font-size: 0.75rem;
+      opacity: 0.8;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 10px;
+      border: 1px dashed rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text-soft);
+      font-size: 0.85rem;
+    }
+
+    input[type="file"]::file-selector-button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      margin-right: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .modes {
+      display: flex;
+      gap: 8px;
+      background: rgba(7, 9, 17, 0.9);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .mode-option {
+      flex: 1;
+      position: relative;
+    }
+
+    .mode-option input {
+      display: none;
+    }
+
+    .mode-pill {
+      width: 100%;
+      border-radius: var(--radius-pill);
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-soft);
+      transition: background 0.14s ease, color 0.14s ease, transform 0.08s ease;
+    }
+
+    .mode-option input:checked + .mode-pill {
+      background: var(--accent-soft);
+      color: var(--accent);
+      transform: translateY(-0.5px);
+    }
+
+    .inputs-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .inputs-row .input-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    label.sub {
+      display: block;
+      font-size: 0.75rem;
+      margin-bottom: 4px;
+      color: var(--text-soft);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text);
+      font-size: 0.85rem;
+    }
+
+    input[type="number"]::placeholder {
+      color: rgba(148, 163, 184, 0.75);
+    }
+
+    .microcopy {
+      margin-top: 4px;
+      font-size: 0.76rem;
+      color: var(--text-soft);
+    }
+
+    .note {
+      font-size: 0.75rem;
+      color: var(--text-soft);
+    }
+
+    .note strong {
+      color: #e5e7f5;
+      font-weight: 500;
+    }
+
+    button.primary {
+      border-radius: var(--radius-pill);
+      border: none;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 10px 25px rgba(79, 140, 255, 0.45);
+      transition: transform 0.08s ease, box-shadow 0.12s ease, opacity 0.1s;
+    }
+
+    button.primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(79, 140, 255, 0.6);
+    }
+
+    button.primary:disabled {
+      opacity: 0.5;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .spinner {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-top-color: #ffffff;
+      display: none;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .spinner.show {
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Preview side */
+    .preview-card {
+      background: radial-gradient(circle at top left, rgba(79, 140, 255, 0.15), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(52, 211, 153, 0.12), transparent 60%);
+      border-radius: 20px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 12px 12px 10px;
+      min-height: 190px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+    }
+
+    .chip {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: var(--text-soft);
+    }
+
+    .stats {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px 12px;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    .stat-value {
+      color: #e5e7f5;
+      font-weight: 500;
+    }
+
+    .preview-frame {
+      flex: 1;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.7);
+      padding: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #preview {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .preview-placeholder {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+    }
+
+    .download-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    #downloadLink {
+      font-size: 0.8rem;
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      text-decoration: none;
+      color: #e5e7f5;
+      background: rgba(15, 23, 42, 0.9);
+      white-space: nowrap;
+      display: none;
+    }
+
+    #info {
+      font-size: 0.78rem;
+      color: var(--text-soft);
+      text-align: right;
+      flex: 1;
+    }
+
+    .preset-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .preset-pill {
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      background: transparent;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.12s ease, color 0.12s ease;
+    }
+
+    .preset-pill:hover {
+      transform: translateY(-1px);
+      background: rgba(79, 140, 255, 0.08);
+    }
+
+    .preset-reset {
+      border: none;
+      background: transparent;
+      color: #ff6b6b;
+      font-size: 0.78rem;
+      cursor: pointer;
+      padding: 6px 4px;
+      margin-left: 2px;
+    }
+
+    .preset-reset:hover {
+      text-decoration: underline;
+    }
+
+  </style>
 </head>
 <body>
+  <div class="shell">
+    <header>
+      <h1>Image Resizer &amp; Compressor</h1>
+      <p>Upscale or downscale your images by resolution or by target file size in MB—right in your browser.</p>
+    </header>
 
-<div class="card">
-  <h1>Image Resizer</h1>
+    <div class="card">
+      <!-- Controls -->
+      <div class="pane">
+        <div class="section-title">Steps</div>
 
-  <input type="file" id="fileInput" accept="image/*">
+        <!-- Step 1: File -->
+        <div class="field-block">
+          <div class="field-label">
+            <span class="main">1. Pick an image</span>
+          </div>
+          <input type="file" id="imageInput" accept="image/*" />
+        </div>
 
-  <div class="row">
-    <input type="number" id="widthInput" placeholder="Width (px)">
-    <input type="number" id="heightInput" placeholder="Height (px)">
+        <!-- Step 2: Mode -->
+        <div class="field-block">
+          <div class="field-label">
+            <span class="main">2. Choose what you care about</span>
+          </div>
+          <div class="modes">
+            <label class="mode-option">
+              <input type="radio" name="mode" value="resolution" checked />
+              <div class="mode-pill">Resize by resolution</div>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="mode" value="filesize" />
+              <div class="mode-pill">Target file size (MB)</div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 3: Options -->
+        <div class="field-block" id="resolutionControls">
+          <div class="field-label">
+            <span class="main">3. Set target resolution</span>
+            <span class="hint">Keeps aspect ratio</span>
+          </div>
+          <div class="inputs-row">
+            <div class="input-group">
+              <label class="sub" for="maxWidth">Max width (px)</label>
+              <input type="number" id="maxWidth" placeholder="e.g. 1920" />
+            </div>
+            <div class="input-group">
+              <label class="sub" for="maxHeight">Max height (px)</label>
+              <input type="number" id="maxHeight" placeholder="e.g. 1080" />
+            </div>
+          </div>
+          <div class="preset-row" aria-label="Quick presets">
+            <button type="button" class="preset-pill" data-w="1280" data-h="720">720p</button>
+            <button type="button" class="preset-pill" data-w="1920" data-h="1080">1080p</button>
+            <button type="button" class="preset-pill" data-w="2560" data-h="1440">2K</button>
+            <button type="button" class="preset-pill" data-w="3840" data-h="2160">4K</button>
+            <button type="button" class="preset-pill" data-w="7680" data-h="4320">8K</button>
+            <button type="button" class="preset-reset" id="presetReset">Reset</button>
+          </div>
+          <div class="microcopy">
+            Leave both blank to keep the original resolution.
+          </div>
+        </div>
+
+        <div class="field-block" id="filesizeControls" style="display:none;">
+          <div class="field-label">
+            <span class="main">3. Set target file size</span>
+          </div>
+          <div class="inputs-row">
+            <div class="input-group">
+              <label class="sub" for="maxSizeMB">Max file size (MB)</label>
+              <input type="number" step="0.1" id="maxSizeMB" placeholder="e.g. 0.5 or 2" />
+            </div>
+            <div class="input-group" style="align-self:end;">
+              <button id="filesizeGo" class="primary" type="button">
+                Go
+                <span class="spinner" id="filesizeSpinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview / Info -->
+      <div class="pane">
+        <div class="section-title">Preview</div>
+        <div class="preview-card">
+          <div class="preview-header">
+            <span class="badge">Output</span>
+            <span class="chip" id="modeChip">Mode: Resolution</span>
+          </div>
+
+          <div class="stats" id="stats">
+            <div>
+              <div class="stat-label">Original</div>
+              <div class="stat-value" id="originalStats">—</div>
+            </div>
+            <div>
+              <div class="stat-label">New</div>
+              <div class="stat-value" id="newStats">—</div>
+            </div>
+          </div>
+
+          <div class="preview-frame">
+            <img id="preview" alt="Resized preview" />
+            <div class="preview-placeholder" id="previewPlaceholder">
+              Your preview will show up here after processing.
+            </div>
+          </div>
+
+          <div class="download-row">
+            <a id="downloadLink" href="#" download="resized.jpg">Download resized image</a>
+            <div id="info"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row" style="align-items:center; margin-top:6px;">
-    <input type="checkbox" id="lockInput" checked style="width:auto; margin:0;">
-    <label for="lockInput" style="font-size:13px; color:#bbb; margin-left:6px;">Lock aspect ratio</label>
-  </div>
+  <!-- Hidden canvas used for resizing -->
+  <canvas id="canvas" style="display:none;"></canvas>
 
-  <div class="presets" style="display:flex; gap:8px; margin-top:10px;">
-    <button type="button" class="presetBtn" data-preset="720">720p</button>
-    <button type="button" class="presetBtn" data-preset="1080">1080p</button>
-    <button type="button" class="presetBtn" data-preset="1440">2K</button>
-    <button type="button" class="presetBtn" data-preset="2160">4K</button>
-  </div>
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const modeRadios = document.querySelectorAll('input[name="mode"]');
+    const resolutionControls = document.getElementById('resolutionControls');
+    const filesizeControls = document.getElementById('filesizeControls');
+    const maxWidthInput = document.getElementById('maxWidth');
+    const maxHeightInput = document.getElementById('maxHeight');
+    const maxSizeMBInput = document.getElementById('maxSizeMB');
+    const filesizeGoBtn = document.getElementById('filesizeGo');
+    const filesizeSpinner = document.getElementById('filesizeSpinner');
 
-  <button id="resizeBtn">Resize & Download</button>
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const infoDiv = document.getElementById('info');
+    const downloadLink = document.getElementById('downloadLink');
+    const originalStats = document.getElementById('originalStats');
+    const newStats = document.getElementById('newStats');
+    const modeChip = document.getElementById('modeChip');
 
-  <canvas id="canvas"></canvas>
-</div>
+    let lastFile = null;
 
-<script>
-const fileInput = document.getElementById("fileInput");
-const widthInput = document.getElementById("widthInput");
-const heightInput = document.getElementById("heightInput");
-const lockInput = document.getElementById("lockInput");
-const presetBtns = document.querySelectorAll(".presetBtn");
-const resizeBtn = document.getElementById("resizeBtn");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-let img = new Image();
-let aspectRatio = null;
-
-fileInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    img.onload = () => {
-      widthInput.value = img.width;
-      heightInput.value = img.height;
-      aspectRatio = img.width / img.height;
-    };
-    img.src = reader.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-function syncHeightFromWidth(){
-  if(!lockInput.checked || !aspectRatio) return;
-  const w = parseInt(widthInput.value);
-  if(!w) return;
-  heightInput.value = Math.round(w / aspectRatio);
-}
-
-function syncWidthFromHeight(){
-  if(!lockInput.checked || !aspectRatio) return;
-  const h = parseInt(heightInput.value);
-  if(!h) return;
-  widthInput.value = Math.round(h * aspectRatio);
-}
-
-widthInput.addEventListener("input", syncHeightFromWidth);
-heightInput.addEventListener("input", syncWidthFromHeight);
-
-presetBtns.forEach(btn => {
-  btn.addEventListener("click", () => {
-    if(!img.src) return alert("Upload an image first");
-    if(!aspectRatio) return;
-
-    const targetH = parseInt(btn.dataset.preset);
-    const isLandscape = img.width >= img.height;
-
-    if(isLandscape){
-      const presetW = Math.round(targetH * (16 / 9));
-      widthInput.value = presetW;
-      heightInput.value = Math.round(presetW / aspectRatio);
-    }else{
-      heightInput.value = targetH;
-      widthInput.value = Math.round(targetH * aspectRatio);
+    // Helpers
+    function getMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
     }
-  });
-});
 
-resizeBtn.addEventListener("click", () => {
-  if(!img.src) return alert("Upload an image first");
+    function formatBytesToMB(bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2);
+    }
 
-  const w = parseInt(widthInput.value);
-  const h = parseInt(heightInput.value);
+    function canvasToBlob(canvas, type = 'image/jpeg', quality = 0.9) {
+      return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob), type, quality);
+      });
+    }
 
-  if(!w || !h) return alert("Enter width and height");
+    // Mode change UI
+    modeRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        const mode = getMode();
+        if (mode === 'resolution') {
+          resolutionControls.style.display = 'block';
+          filesizeControls.style.display = 'none';
+          modeChip.textContent = 'Mode: Resolution';
+        } else {
+          resolutionControls.style.display = 'none';
+          filesizeControls.style.display = 'block';
+          modeChip.textContent = 'Mode: File size (MB)';
+        }
+      });
+    });
 
-  canvas.width = w;
-  canvas.height = h;
+    // Track selected file stats
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      lastFile = file || null;
+      if (!file) {
+        originalStats.textContent = '—';
+        return;
+      }
+      const sizeMB = formatBytesToMB(file.size);
+      // We'll only know resolution after loading, but show size now
+      originalStats.textContent = `Size: ${sizeMB} MB, loading resolution…`;
+    });
 
-  ctx.clearRect(0,0,w,h);
-  ctx.drawImage(img, 0, 0, w, h);
+    function setGoLoading(isLoading) {
+      if (!filesizeGoBtn || !filesizeSpinner) return;
+      filesizeGoBtn.disabled = !!isLoading;
+      filesizeSpinner.classList.toggle('show', !!isLoading);
+    }
 
-  const link = document.createElement("a");
-  link.download = `resized-${w}x${h}.jpg`;
-  link.href = canvas.toDataURL("image/jpeg", 0.95);
-  link.click();
-});
-</script>
+    async function processImage(force = false) {
+      const file = imageInput.files[0];
+      if (!file) {
+        return;
+      }
 
+      const mode = getMode();
+
+      if (mode === 'filesize') {
+        if (!force) return;
+        setGoLoading(true);
+        const maxMB = parseFloat(maxSizeMBInput.value);
+        if (!maxMB || maxMB <= 0) {
+          alert('Please enter a valid max file size in MB.');
+          setGoLoading(false);
+          return;
+        }
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = async () => {
+          const ctx = canvas.getContext('2d');
+
+          // Original stats (now we know resolution)
+          const originalMB = formatBytesToMB(file.size);
+          originalStats.textContent =
+            `${img.width} × ${img.height}px, ${originalMB} MB`;
+
+          let targetWidth = img.width;
+          let targetHeight = img.height;
+
+          if (mode === 'resolution') {
+            const maxW = parseInt(maxWidthInput.value, 10) || img.width;
+            const maxH = parseInt(maxHeightInput.value, 10) || img.height;
+
+            const scale = Math.min(maxW / img.width, maxH / img.height);
+            targetWidth = Math.round(img.width * scale);
+            targetHeight = Math.round(img.height * scale);
+          }
+
+          const noResize = (targetWidth === img.width && targetHeight === img.height);
+
+          let finalBlob;
+
+          if (mode === 'filesize') {
+            const maxBytes = parseFloat(maxSizeMBInput.value) * 1024 * 1024;
+            const type = file.type || 'image/jpeg';
+            const quality = (type === 'image/jpeg' || type === 'image/webp') ? 0.92 : null;
+
+            const encodeAtScale = async (scale) => {
+              const w = Math.max(1, Math.round(img.width * scale));
+              const h = Math.max(1, Math.round(img.height * scale));
+              canvas.width = w;
+              canvas.height = h;
+              ctx.clearRect(0, 0, w, h);
+              ctx.drawImage(img, 0, 0, w, h);
+
+              let blob;
+              if (type === 'image/png') {
+                blob = await canvasToBlob(canvas, 'image/png');
+              } else if (type === 'image/webp') {
+                blob = await canvasToBlob(canvas, 'image/webp', quality ?? 0.92);
+              } else {
+                blob = await canvasToBlob(canvas, 'image/jpeg', quality ?? 0.92);
+              }
+              return { blob, w, h };
+            };
+
+            // Find the closest size UNDER target by adjusting resolution only.
+            let lo = 0.05;
+            let hi = 1.0;
+            let best = null;
+
+            // Expand upper bound if needed (allow upscale to reach target).
+            for (let i = 0; i < 8; i++) {
+              const test = await encodeAtScale(hi);
+              if (test.blob.size <= maxBytes) {
+                best = test; // current best under target
+                if (hi >= 8) break;
+                hi = Math.min(8, hi * 1.4);
+              } else {
+                // now we have an upper bound that is too big
+                break;
+              }
+            }
+
+            // Binary search between lo and hi to get closest under target.
+            for (let i = 0; i < 16; i++) {
+              const mid = (lo + hi) / 2;
+              const res = await encodeAtScale(mid);
+              if (res.blob.size <= maxBytes) {
+                best = res;
+                lo = mid;
+              } else {
+                hi = mid;
+              }
+            }
+
+            if (!best) {
+              // If nothing fits under target, use smallest we can (at low scale).
+              best = await encodeAtScale(lo);
+            }
+
+            finalBlob = best.blob;
+            targetWidth = best.w;
+            targetHeight = best.h;
+          } else {
+            // Resolution mode: preserve the original format.
+            // If nothing changes, reuse the original file to keep size identical.
+            if (noResize) {
+              finalBlob = file;
+            } else {
+              canvas.width = targetWidth;
+              canvas.height = targetHeight;
+              ctx.clearRect(0, 0, targetWidth, targetHeight);
+              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+              const type = file.type || 'image/jpeg';
+              const quality = (type === 'image/jpeg' || type === 'image/webp') ? 0.92 : null;
+              if (type === 'image/png') {
+                finalBlob = await canvasToBlob(canvas, 'image/png');
+              } else if (type === 'image/webp') {
+                finalBlob = await canvasToBlob(canvas, 'image/webp', quality ?? 0.92);
+              } else {
+                finalBlob = await canvasToBlob(canvas, 'image/jpeg', quality ?? 0.92);
+              }
+            }
+          }
+
+          const url = URL.createObjectURL(finalBlob);
+          preview.src = url;
+          preview.style.display = 'block';
+          previewPlaceholder.style.display = 'none';
+
+          downloadLink.href = url;
+          if (mode === 'filesize') {
+            const ext = finalBlob.type === 'image/png'
+              ? 'png'
+              : (finalBlob.type === 'image/webp' ? 'webp' : 'jpg');
+            downloadLink.download = `resized.${ext}`;
+          } else {
+            const ext = finalBlob.type === 'image/png'
+              ? 'png'
+              : (finalBlob.type === 'image/webp' ? 'webp' : 'jpg');
+            downloadLink.download = `resized.${ext}`;
+          }
+          downloadLink.style.display = 'inline-block';
+
+          const newMB = formatBytesToMB(finalBlob.size);
+          newStats.textContent =
+            `${targetWidth} × ${targetHeight}px, ${newMB} MB`;
+
+          const ratio = file.size > 0 ? (finalBlob.size / file.size) : 1;
+          const pct = (ratio * 100).toFixed(0);
+          infoDiv.textContent =
+            `~${pct}% of original size`;
+
+          if (mode === 'filesize') setGoLoading(false);
+        };
+
+        img.onerror = () => {
+          alert('Could not load the image file.');
+          if (mode === 'filesize') setGoLoading(false);
+        };
+
+        img.src = e.target.result;
+      };
+
+      reader.onerror = () => {
+        alert('Could not read the image file.');
+        if (mode === 'filesize') setGoLoading(false);
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // Auto-process when inputs change
+    imageInput.addEventListener('change', processImage);
+    [maxWidthInput, maxHeightInput].forEach(el => {
+      el.addEventListener('input', () => {
+        if (imageInput.files[0] && getMode() === 'resolution') processImage();
+      });
+    });
+    modeRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        if (imageInput.files[0] && getMode() === 'resolution') processImage();
+      });
+    });
+
+    document.querySelectorAll('.preset-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        maxWidthInput.value = pill.dataset.w;
+        maxHeightInput.value = pill.dataset.h;
+        if (imageInput.files[0] && getMode() === 'resolution') processImage();
+      });
+    });
+
+    document.getElementById('filesizeGo').addEventListener('click', () => {
+      if (imageInput.files[0]) processImage(true);
+    });
+
+    document.getElementById('presetReset').addEventListener('click', () => {
+      maxWidthInput.value = '';
+      maxHeightInput.value = '';
+      if (imageInput.files[0] && getMode() === 'resolution') processImage();
+    });
+
+  </script>
 </body>
 </html>
