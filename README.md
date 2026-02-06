@@ -9,3 +9,6 @@ A fast, local-first image scaler that can resize by resolution or target file si
 - Auto-processing for resolution mode
 - Download the resized image instantly
 - Single-file static site (no build required)
+
+![App Screenshot](Screenshot%202026-02-05%20192106.png)
+
